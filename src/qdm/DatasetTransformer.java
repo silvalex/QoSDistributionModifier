@@ -1,11 +1,15 @@
 package qdm;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -41,17 +45,24 @@ public class DatasetTransformer {
 	public double maxCost = Double.MIN_VALUE;
 
 	public Map<String, Service> serviceMap = new HashMap<String, Service>();
+	public List<double[]> newQoSValues = new ArrayList<double[]>();
 	Random random;
 
 	// Name of original file, name of new file, seed
 	public static void main(String[] args) {
-		new DatasetTransformer(args[0], args[1], Long.parseLong(args[2]));
+		new DatasetTransformer(args[0], args[1], args[2], Long.parseLong(args[2]));
 	}
 
-	public DatasetTransformer(String filename, String newFilename, long seed) {
+	public DatasetTransformer(String filename, String newFilename, String qosFilename, long seed) {
 		random = new Random(seed);
 
 		parseWSCServiceFile(filename);
+		parseQoSFile(qosFilename);
+
+		// If not enough QoS values were generated to replace the old ones, tell the user
+		if (newQoSValues.size() < serviceMap.size())
+			throw new RuntimeException(String.format("Only %d services can be modified with new quality values, but we need to modify %d values. Please provide a file with more data than '%s'.", newQoSValues.size(), serviceMap.size(), qosFilename));
+
 		modifyQoSValues(serviceMap);
 		writeXmlFile(newFilename);
 	}
@@ -171,13 +182,38 @@ public class DatasetTransformer {
 	}
 
 	private void modifyQoSValues(Map<String,Service> serviceMap) {
+		int idx = 0;
+
 		for (Service s : serviceMap.values()) {
+			double[] newQos = newQoSValues.get(idx);
 			double[] qos = s.getQos();
-			qos[DatasetTransformer.TIME] = -1.0;
-			qos[DatasetTransformer.COST] = -1.0;
-			qos[DatasetTransformer.AVAILABILITY] = -1.0;
-			qos[DatasetTransformer.RELIABILITY] = -1.0;
+
+			qos[DatasetTransformer.TIME] = newQos[DatasetTransformer.TIME];
+			//qos[DatasetTransformer.COST] = newQos[DatasetTransformer.COST];
+			qos[DatasetTransformer.AVAILABILITY] = newQos[DatasetTransformer.AVAILABILITY];
+			qos[DatasetTransformer.RELIABILITY] = newQos[DatasetTransformer.RELIABILITY];
+
+			idx++;
 		}
 	}
 
+	private void parseQoSFile(String qosFilename) {
+		try {
+			Scanner scan = new Scanner(new File(qosFilename));
+			while (scan.hasNext()) {
+				double[] newQos = new double[4];
+				newQos[TIME] = scan.nextDouble();
+				newQos[COST] = scan.nextDouble();
+				newQos[AVAILABILITY] = scan.nextDouble();
+				newQos[RELIABILITY] = scan.nextDouble();
+				newQoSValues.add(newQos);
+			}
+			scan.close();
+
+		}
+		catch (FileNotFoundException e) {
+			System.out.println(String.format("Could not load file '%s'.", qosFilename));
+			e.printStackTrace();
+		}
+	}
 }
