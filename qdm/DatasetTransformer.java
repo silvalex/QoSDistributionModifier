@@ -48,13 +48,13 @@ public class DatasetTransformer {
 	public List<double[]> newQoSValues = new ArrayList<double[]>();
 	Random random;
 
-	// Name of original file, name of new file, seed
+	// Name of original file, name of new file, name of qos file
 	public static void main(String[] args) {
-		new DatasetTransformer(args[0], args[1], args[2], Long.parseLong(args[2]));
+		new DatasetTransformer(args[0], args[1], args[2]);
 	}
 
-	public DatasetTransformer(String filename, String newFilename, String qosFilename, long seed) {
-		random = new Random(seed);
+	public DatasetTransformer(String filename, String newFilename, String qosFilename) {
+		//random = new Random(seed);
 
 		parseWSCServiceFile(filename);
 		parseQoSFile(qosFilename);
@@ -188,7 +188,7 @@ public class DatasetTransformer {
 			double[] newQos = newQoSValues.get(idx);
 			double[] qos = s.getQos();
 
-			qos[DatasetTransformer.TIME] = newQos[DatasetTransformer.TIME];
+			//qos[DatasetTransformer.TIME] = newQos[DatasetTransformer.TIME];
 			//qos[DatasetTransformer.COST] = newQos[DatasetTransformer.COST];
 			qos[DatasetTransformer.AVAILABILITY] = newQos[DatasetTransformer.AVAILABILITY];
 			qos[DatasetTransformer.RELIABILITY] = newQos[DatasetTransformer.RELIABILITY];
@@ -202,8 +202,6 @@ public class DatasetTransformer {
 			Scanner scan = new Scanner(new File(qosFilename));
 			while (scan.hasNext()) {
 				double[] newQos = new double[4];
-				newQos[TIME] = scan.nextDouble();
-				newQos[COST] = scan.nextDouble();
 				newQos[AVAILABILITY] = scan.nextDouble();
 				newQos[RELIABILITY] = scan.nextDouble();
 				newQoSValues.add(newQos);
