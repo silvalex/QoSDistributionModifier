@@ -202,8 +202,8 @@ public class DatasetTransformer {
 			Scanner scan = new Scanner(new File(qosFilename));
 			while (scan.hasNext()) {
 				double[] newQos = new double[4];
-				newQos[AVAILABILITY] = scan.nextDouble();
-				newQos[RELIABILITY] = scan.nextDouble();
+				newQos[AVAILABILITY] = scan.nextDouble()/100.0;
+				newQos[RELIABILITY] = scan.nextDouble()/100.0;
 				newQoSValues.add(newQos);
 			}
 			scan.close();
